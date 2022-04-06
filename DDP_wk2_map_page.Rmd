@@ -1,0 +1,55 @@
+---
+title: "DDP Week 2 Map Webpage"
+author: "Joshua Parsell"
+date: "4/5/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Make a Map
+
+Use the Leaflet package to produce a map.
+
+### Camping Trip Destinations
+
+- Hover on the pins to see details about camping sites.
+- Hover on the lines to see estimated drive times.
+
+```{r, echo=FALSE, message = FALSE,warning=FALSE}
+library(leaflet)
+library(dplyr)
+
+mapData <- read.csv("Wk2_MapData.csv")
+
+lineData <-select(mapData, Lat, Long)
+lineData$group <- paste0(mapData$Activity," to ",mapData$Location)
+lineData2 <- lineData
+for (row in 1:nrow(lineData2)){
+  if (row==1){}
+  else{
+    lineData2[row,]$Lat <- lineData[row-1,]$Lat
+    lineData2[row,]$Long <- lineData[row-1,]$Long
+  }
+}
+
+lineData <- lineData[-1,]
+lineData2 <- lineData2[-1,]
+lineData <- rbind(lineData,lineData2)
+
+myMap <- mapData %>% leaflet() %>% addTiles() %>% 
+  addMarkers(label = paste0(mapData$Nights," night(s)\n",mapData$RV.Park,"\n",mapData$Location)) #  %>%
+
+for (tripSegment in unique(lineData$group))  {
+  segmentData <- filter(lineData, group==tripSegment)
+  myMap <- myMap %>% addPolylines(lng = segmentData$Long, 
+                                  lat = segmentData$Lat, 
+                                  group = segmentData$group, 
+                                  label = segmentData$group)
+}
+myMap
+```
+
+
